@@ -5,11 +5,13 @@ import dash_bootstrap_components as dbc
 
 # HoloViews imports
 import holoviews as hv
-from holoviews.element.tiles import CartoLight, CartoDark, CartoEco
 from holoviews.operation import histogram
 from holoviews.operation.datashader import datashade
 from holoviews.plotting.plotly.dash import to_dash
 from holoviews.selection import link_selections
+
+from download_dataset import download_dataset
+from mapbox_token import get_mapbox_token
 
 import pandas as pd
 import plotly.io as pio
@@ -17,8 +19,7 @@ from plotly import colors
 
 pio.templates.default = "plotly_white"
 
-# Download and cache dataset
-df = pd.read_csv("nyc_taxi_small.parq")
+df = pd.read_parquet(download_dataset())
 ds = hv.Dataset(df)
 
 # Uncomment for CUDF support
@@ -30,7 +31,10 @@ ds = ds.redim.label(fare_amount="Fare Amount")
 
 points = hv.Points(ds, ['dropoff_x', 'dropoff_y'])
 shaded = datashade(points, cmap=colors.sequential.Plasma)
-tiles = CartoLight().opts(height=500, width=500, padding=0)
+tiles = hv.Tiles().opts(
+    mapboxstyle="light", accesstoken=get_mapbox_token(),
+    height=500, width=500, padding=0
+)
 
 hist = histogram(
     ds, dimension="fare_amount", normed=False, num_bins=20, bin_range=(0, 30.0)
@@ -55,6 +59,7 @@ linked_map.opts(margins=(30, 30, 30, 30))
 
 # Create Dash App
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+server = app.server
 
 components = to_dash(
     app, [linked_map, linked_hist], reset_button=True, button_class=dbc.Button,
@@ -62,7 +67,7 @@ components = to_dash(
 
 app.layout = dbc.Container([
     html.H1("NYC Taxi Demo", style={"padding-top": 40}),
-    html.H3("Crossfiltering with Dash, Datashader, and HoloViews"),
+    html.H3("Crossfiltering 10 million trips with Dash, Datashader, and HoloViews"),
     html.Hr(),
     dbc.Row([
         dbc.Col(children=[dbc.Card([
