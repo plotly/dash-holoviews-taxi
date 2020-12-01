@@ -11,38 +11,34 @@ from holoviews.operation.datashader import datashade
 from holoviews.plotting.plotly.dash import to_dash
 from holoviews.selection import link_selections
 
-# Datashader colorscale import
 import pandas as pd
-from datashader.colors import Hot
 import plotly.io as pio
 from plotly import colors
-# bgcolor = "rgba(0,0,0,0.03)"
-# pio.templates["plotly_dark"].layout.update(paper_bgcolor=bgcolor, plot_bgcolor=bgcolor)
+
 pio.templates.default = "plotly_white"
 
-# Find bounding box using http://bboxfinder.com/
-x_range, y_range = (-8251262.5478, -8218623.9368), (4963419.3224, 4987496.9864)
-usecols = ['dropoff_x', 'dropoff_y', 'passenger_count', 'fare_amount']
+# Download and cache dataset
+df = pd.read_csv("nyc_taxi_small.parq")
+ds = hv.Dataset(df)
 
-df = pd.read_csv("/media/jmmease/ExtraDrive1/datashader/datashader-examples/data/nyc_taxi.csv")
-# ds = hv.Dataset(df)
-
-import cudf
-ds = hv.Dataset(cudf.from_pandas(df))
+# Uncomment for CUDF support
+# import cudf
+# ds = hv.Dataset(cudf.from_pandas(df))
 
 # Add more descriptive labels
 ds = ds.redim.label(fare_amount="Fare Amount")
 
 points = hv.Points(ds, ['dropoff_x', 'dropoff_y'])
 shaded = datashade(points, cmap=colors.sequential.Plasma)
-tiles = CartoLight().redim.range(x=x_range, y=y_range).opts(height=800, width=800)
+tiles = CartoLight().opts(height=500, width=500, padding=0)
 
 hist = histogram(
     ds, dimension="fare_amount", normed=False, num_bins=20, bin_range=(0, 30.0)
-).opts(color=colors.qualitative.Plotly[0])
+).opts(color=colors.qualitative.Plotly[0], height=500)
 
 lnk_sel = link_selections.instance()
 linked_map = lnk_sel(tiles * shaded)
+
 linked_hist = lnk_sel(hist)
 
 # Use plot hook to set the default drag mode to box selection
@@ -52,9 +48,11 @@ def set_dragmode(plot, element):
     fig['layout']['selectdirection'] = "h"
 
 linked_hist.opts(hv.opts.Histogram(hooks=[set_dragmode]))
+
+# Set plot margins, ordered (left, bottom, right, top)
 linked_hist.opts(margins=(60, 40, 30, 30))
 linked_map.opts(margins=(30, 30, 30, 30))
-# (left, bottom, right, top)
+
 # Create Dash App
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
