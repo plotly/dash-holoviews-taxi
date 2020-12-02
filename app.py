@@ -32,11 +32,8 @@ ds = ds.redim.label(fare_amount="Fare Amount")
 points = hv.Points(ds, ["dropoff_x", "dropoff_y"])
 shaded = datashade(points, cmap=colors.sequential.Plasma)
 tiles = hv.Tiles().opts(
-    mapboxstyle="light",
-    accesstoken=get_mapbox_token(),
-    height=500,
-    width=500,
-    padding=0,
+    mapboxstyle="light", accesstoken=get_mapbox_token(),
+    height=500, width=500, padding=0
 )
 
 hist = histogram(
@@ -66,49 +63,28 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
 
 components = to_dash(
-    app,
-    [linked_map, linked_hist],
-    reset_button=True,
-    button_class=dbc.Button,
+    app, [linked_map, linked_hist], reset_button=True, button_class=dbc.Button,
 )
 
-app.layout = dbc.Container(
-    [
-        html.H1("NYC Taxi Demo", style={"padding-top": 40}),
-        html.H3("Crossfiltering 10 million trips with Dash, Datashader, and HoloViews"),
-        html.Hr(),
-        dbc.Row(
-            [
-                dbc.Col(
-                    children=[
-                        dbc.Card(
-                            [
-                                dbc.CardHeader("Drop off locations"),
-                                dbc.CardBody(
-                                    children=[
-                                        components.graphs[0],
-                                    ]
-                                ),
-                            ]
-                        )
-                    ]
-                ),
-                dbc.Col(
-                    children=[
-                        dbc.Card(
-                            [
-                                dbc.CardHeader("Fair Amount"),
-                                dbc.CardBody(children=[components.graphs[1]]),
-                            ]
-                        )
-                    ]
-                ),
-            ]
-        ),
-        html.Div(style={"margin-top": 10}, children=components.resets[0]),
-        components.store,
-    ]
-)
+app.layout = dbc.Container([
+    html.H1("NYC Taxi Demo", style={"padding-top": 40}),
+    html.H3("Crossfiltering 10 million trips with Dash, Datashader, and HoloViews"),
+    html.Hr(),
+    dbc.Row([
+        dbc.Col(children=[dbc.Card([
+            dbc.CardHeader("Drop off locations"),
+            dbc.CardBody(children=[
+                components.graphs[0],
+            ])])]),
+        dbc.Col(children=[dbc.Card([
+            dbc.CardHeader("Fair Amount"),
+            dbc.CardBody(children=[
+                components.graphs[1]
+            ])])])
+    ]),
+    html.Div(style={"margin-top": 10}, children=components.resets[0]),
+    components.store,
+])
 
 # Press the green button in the gutter to run the script.
 if __name__ == "__main__":
