@@ -6,7 +6,7 @@ This example requires a mapbox token that can be created from a free mapbox acco
 
 To run this app you must either:
  - Create an environment variable named `MAPBOX_TOKEN` that is set to your token string.
- - Create a file named `.mapbox` in the top-level project directory containing your token.
+ - Create a file named `.mapbox_token` in the top-level project directory containing your token.
  
 ## Setup environment
 Set up the app environment in a fresh virtual environment with
